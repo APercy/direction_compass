@@ -78,10 +78,12 @@ function compass_hud.update_hud(player)
         local player_yaw = 0
         if player then
             player_yaw = player:get_look_horizontal()
-
-            player:hud_change(ids["x"], "text", string.format("%.1f", player:get_pos().x ))
-            player:hud_change(ids["y"], "text", string.format("%.1f", player:get_pos().y ))
-            player:hud_change(ids["z"], "text", string.format("%.1f", player:get_pos().z ))
+            local player_pos = player:get_pos()
+            if player_pos then
+                player:hud_change(ids["x"], "text", string.format("%.1f", player_pos.x ))
+                player:hud_change(ids["y"], "text", string.format("%.1f", player_pos.y ))
+                player:hud_change(ids["z"], "text", string.format("%.1f", player_pos.z ))
+            end
         end
         local N_angle = math.deg(player_yaw)
         local S_angle = N_angle + 180
