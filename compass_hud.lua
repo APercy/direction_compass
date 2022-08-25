@@ -63,7 +63,7 @@ function compass_hud.update_hud(player)
     local player_name = player:get_player_name()
 
     local main_x_pos = 1
-    local main_y_pos = 0.3
+    local main_y_pos = 0.33
 
     local screen_pos_y = 0
     local screen_pos_x = 0
