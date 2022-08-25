@@ -177,7 +177,7 @@ function compass_hud.update_hud(player)
             text      = "HDG: ",
             alignment = 0,
             scale     = { x = 100, y = 30},
-            number    = 0xFFFFFF,
+            number    = 0x00FF00,
         })
 
         ids["cardinal"] = player:hud_add({
@@ -187,7 +187,7 @@ function compass_hud.update_hud(player)
             text      = "---",
             alignment = 0,
             scale     = { x = 100, y = 30},
-            number    = 0xFFFFFF,
+            number    = 0xFFFF00,
         })
 
         ids["bg"] = player:hud_add({
