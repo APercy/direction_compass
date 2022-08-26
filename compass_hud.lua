@@ -85,11 +85,13 @@ function compass_hud.update_hud(player)
                 player:hud_change(ids["z"], "text", string.format("%.1f", player_pos.z ))
             end
         end
-        local N_angle = math.deg(player_yaw)
-        local S_angle = N_angle + 180
+        if player_yaw then
+            local N_angle = math.deg(player_yaw)
+            local S_angle = N_angle + 180
 
-        compass_hud.animate_gauge(player, ids, "N_pt_", N_gauge_x, N_gauge_y, N_angle)
-        compass_hud.animate_gauge(player, ids, "S_pt_", S_gauge_x, S_gauge_y, S_angle)
+            compass_hud.animate_gauge(player, ids, "N_pt_", N_gauge_x, N_gauge_y, N_angle)
+            compass_hud.animate_gauge(player, ids, "S_pt_", S_gauge_x, S_gauge_y, S_angle)
+        end
 
     else
         ids = {}
