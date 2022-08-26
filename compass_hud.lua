@@ -1,102 +1,19 @@
 compass_hud={}
 compass_hud.hud_list = {}
+compass_hud.pos = 116
 
-function compass_hud.animate_gauge(player, ids, prefix, x, y, angle)
-    local deg_angle = angle + 180
-    if deg_angle > 360 then deg_angle = deg_angle - 360 end
-    if deg_angle < 0 then deg_angle = deg_angle + 360 end
-
-    --mostra a direção, mas como na vida real
-    local exibition_angle = deg_angle - (2*deg_angle)
-    if exibition_angle > 360 then exibition_angle = exibition_angle - 360 end
-    if exibition_angle < 0 then exibition_angle = exibition_angle + 360 end
-    local formatted = string.format(
-       "%.2fº",
-       exibition_angle
-    )
-    player:hud_change(ids["hdg"], "text", formatted)
-
-    --mostre-me também o nome
-    local dir_name = "---"
-    if exibition_angle > 337.5 or exibition_angle <= 22.5 then dir_name = "North" end
-    if exibition_angle > 22.5 and exibition_angle <= 67.5 then dir_name = "Northeast" end
-    if exibition_angle > 67.5 and exibition_angle <= 112.5 then dir_name = "East" end
-    if exibition_angle > 112.5 and exibition_angle <= 157.5 then dir_name = "Southeast" end
-    if exibition_angle > 157.5 and exibition_angle <= 202.5 then dir_name = "South" end
-    if exibition_angle > 202.5 and exibition_angle <= 247.5 then dir_name = "Southwest" end
-    if exibition_angle > 247.5 and exibition_angle <= 292.5 then dir_name = "West" end
-    if exibition_angle > 292.5 and exibition_angle <= 337.5 then dir_name = "Northwest" end
-    player:hud_change(ids["cardinal"], "text", dir_name)
-
-    --aqui exibe no analogico
-    local angle_in_rad = math.rad(deg_angle)
-
-    local dim = 5
-    local pos_x = math.sin(angle_in_rad) * dim
-    local pos_y = math.cos(angle_in_rad) * dim
-    player:hud_change(ids[prefix .. "2"], "offset", {x = pos_x + x, y = pos_y + y})
-    dim = 10
-    pos_x = math.sin(angle_in_rad) * dim
-    pos_y = math.cos(angle_in_rad) * dim
-    player:hud_change(ids[prefix .. "3"], "offset", {x = pos_x + x, y = pos_y + y})
-    dim = 15
-    pos_x = math.sin(angle_in_rad) * dim
-    pos_y = math.cos(angle_in_rad) * dim
-    player:hud_change(ids[prefix .. "4"], "offset", {x = pos_x + x, y = pos_y + y})
-    dim = 20
-    pos_x = math.sin(angle_in_rad) * dim
-    pos_y = math.cos(angle_in_rad) * dim
-    player:hud_change(ids[prefix .. "5"], "offset", {x = pos_x + x, y = pos_y + y})
-    dim = 25
-    --if prefix == "N_pt_" then
-        pos_x = math.sin(angle_in_rad) * dim
-        pos_y = math.cos(angle_in_rad) * dim
-        player:hud_change(ids[prefix .. "6"], "offset", {x = pos_x + x, y = pos_y + y})
-        dim = 30
-        pos_x = math.sin(angle_in_rad) * dim
-        pos_y = math.cos(angle_in_rad) * dim
-        player:hud_change(ids[prefix .. "7"], "offset", {x = pos_x + x, y = pos_y + y})
-    --end
-end
-
-function compass_hud.update_hud(player)
-    local player_name = player:get_player_name()
-
-    local main_x_pos = 1
-    local main_y_pos = 0.33
-
-    local screen_pos_y = 0
-    local screen_pos_x = 0
-
-    local N_gauge_x = screen_pos_x - 116
-    local N_gauge_y = screen_pos_y + 116
-    local S_gauge_x = screen_pos_x - 116
-    local S_gauge_y = screen_pos_y + 116
-
-    local ids = compass_hud.hud_list[player_name]
-    if ids then
-        local player_yaw = 0
-        if player then
-            player_yaw = player:get_look_horizontal()
-            local player_pos = player:get_pos()
-            if player_pos then
-                player:hud_change(ids["x"], "text", string.format("%.1f", player_pos.x ))
-                player:hud_change(ids["y"], "text", string.format("%.1f", player_pos.y ))
-                player:hud_change(ids["z"], "text", string.format("%.1f", player_pos.z ))
-            end
-        end
-        if player_yaw then
-            local N_angle = math.deg(player_yaw)
-            local S_angle = N_angle + 180
-
-            compass_hud.animate_gauge(player, ids, "N_pt_", N_gauge_x, N_gauge_y, N_angle)
-            compass_hud.animate_gauge(player, ids, "S_pt_", S_gauge_x, S_gauge_y, S_angle)
-        end
-
-    else
-        ids = {}
+local function add_analog_compass(ids, player, main_x_pos, main_y_pos, screen_pos_x, screen_pos_y, show_analogic)
+    show_analogic = show_analogic or false
+    if show_analogic and not ids["bg"] then
+        local player_name = player:get_player_name()
         local S_pointer_texture = "direction_compass_ind_box.png"
         local N_pointer_texture = "direction_compass_ind_box_red.png"
+
+        local N_gauge_x = screen_pos_x - compass_hud.pos
+        local N_gauge_y = screen_pos_y + compass_hud.pos
+        local S_gauge_x = screen_pos_x - compass_hud.pos
+        local S_gauge_y = screen_pos_y + compass_hud.pos
+
         local elementN = {
             hud_elem_type = "image",
             position  = {x = main_x_pos, y = main_y_pos},
@@ -114,6 +31,188 @@ function compass_hud.update_hud(player)
             alignment = { x = -1.12, y = 1.12 },
         }
 
+        ids["bg"] = player:hud_add({
+            hud_elem_type = "image",
+            position  = {x = main_x_pos, y = main_y_pos},
+            offset    = {x = screen_pos_x, y = screen_pos_y},
+            text      = "direction_compass_face.png",
+            scale     = { x = 0.5, y = 0.5 },
+            alignment = { x = -2.25, y = 2.25 },
+        })
+
+        ids["N_pt_1"] = player:hud_add(elementN)
+        ids["N_pt_2"] = player:hud_add(elementN)
+        ids["N_pt_3"] = player:hud_add(elementN)
+        ids["N_pt_4"] = player:hud_add(elementN)
+        ids["N_pt_5"] = player:hud_add(elementN)
+        ids["N_pt_6"] = player:hud_add(elementN)
+        ids["N_pt_7"] = player:hud_add(elementN)
+
+        ids["S_pt_1"] = player:hud_add(elementS)
+        ids["S_pt_2"] = player:hud_add(elementS)
+        ids["S_pt_3"] = player:hud_add(elementS)
+        ids["S_pt_4"] = player:hud_add(elementS)
+        ids["S_pt_5"] = player:hud_add(elementS)
+        ids["S_pt_6"] = player:hud_add(elementS)
+        ids["S_pt_7"] = player:hud_add(elementS)
+
+        ids["compass_center"] = player:hud_add({
+            hud_elem_type = "image",
+            position  = {x = main_x_pos, y = main_y_pos},
+            offset    = {x = screen_pos_x - 108, y = screen_pos_y + 108},
+            text      = "direction_compass_center.png",
+            scale     = { x = 4, y = 4 },
+            alignment = { x = -1.52, y = 1.50 },
+        })
+        compass_hud.hud_list[player_name] = ids
+    end
+end
+
+local function remove_analog_compass(ids, player, show_analogic)
+    show_analogic = show_analogic or false
+    if not show_analogic and ids["bg"] then
+        local player_name = player:get_player_name()
+        player:hud_remove(ids["bg"])
+        ids["bg"] = nil
+        player:hud_remove(ids["N_pt_7"])
+        player:hud_remove(ids["N_pt_6"])
+        player:hud_remove(ids["N_pt_5"])
+        player:hud_remove(ids["N_pt_4"])
+        player:hud_remove(ids["N_pt_3"])
+        player:hud_remove(ids["N_pt_2"])
+        player:hud_remove(ids["N_pt_1"])
+        ids["N_pt_7"] = nil
+        ids["N_pt_6"] = nil
+        ids["N_pt_5"] = nil
+        ids["N_pt_4"] = nil
+        ids["N_pt_3"] = nil
+        ids["N_pt_2"] = nil
+        ids["N_pt_1"] = nil
+
+        player:hud_remove(ids["S_pt_7"])
+        player:hud_remove(ids["S_pt_6"])
+        player:hud_remove(ids["S_pt_5"])
+        player:hud_remove(ids["S_pt_4"])
+        player:hud_remove(ids["S_pt_3"])
+        player:hud_remove(ids["S_pt_2"])
+        player:hud_remove(ids["S_pt_1"])
+        ids["S_pt_7"] = nil
+        ids["S_pt_6"] = nil
+        ids["S_pt_5"] = nil
+        ids["S_pt_4"] = nil
+        ids["S_pt_3"] = nil
+        ids["S_pt_2"] = nil
+        ids["S_pt_1"] = nil
+
+        player:hud_remove(ids["compass_center"])
+        ids["compass_center"] = nil
+
+        compass_hud.hud_list[player_name] = ids
+    end
+end
+
+function compass_hud.animate_gauge(player, ids, prefix, x, y, angle)
+    local deg_angle = angle + 180
+    if deg_angle > 360 then deg_angle = deg_angle - 360 end
+    if deg_angle < 0 then deg_angle = deg_angle + 360 end
+
+    --aqui exibe no analogico
+    local angle_in_rad = math.rad(deg_angle)
+
+    local dim = 5
+    local pos_x = math.sin(angle_in_rad) * dim
+    local pos_y = math.cos(angle_in_rad) * dim
+    --minetest.chat_send_all(prefix .. "2")
+    player:hud_change(ids[prefix .. "2"], "offset", {x = pos_x + x, y = pos_y + y})
+    dim = 10
+    pos_x = math.sin(angle_in_rad) * dim
+    pos_y = math.cos(angle_in_rad) * dim
+    player:hud_change(ids[prefix .. "3"], "offset", {x = pos_x + x, y = pos_y + y})
+    dim = 15
+    pos_x = math.sin(angle_in_rad) * dim
+    pos_y = math.cos(angle_in_rad) * dim
+    player:hud_change(ids[prefix .. "4"], "offset", {x = pos_x + x, y = pos_y + y})
+    dim = 20
+    pos_x = math.sin(angle_in_rad) * dim
+    pos_y = math.cos(angle_in_rad) * dim
+    player:hud_change(ids[prefix .. "5"], "offset", {x = pos_x + x, y = pos_y + y})
+    dim = 25
+    
+    pos_x = math.sin(angle_in_rad) * dim
+    pos_y = math.cos(angle_in_rad) * dim
+    player:hud_change(ids[prefix .. "6"], "offset", {x = pos_x + x, y = pos_y + y})
+    dim = 30
+    pos_x = math.sin(angle_in_rad) * dim
+    pos_y = math.cos(angle_in_rad) * dim
+    player:hud_change(ids[prefix .. "7"], "offset", {x = pos_x + x, y = pos_y + y})
+end
+
+function compass_hud.update_hud(player, show_analogic)
+    show_analogic = show_analogic or false
+    local player_name = player:get_player_name()
+
+    local main_x_pos = 1
+    local main_y_pos = 0.33
+
+    local screen_pos_y = 0
+    local screen_pos_x = 0
+
+    local ids = compass_hud.hud_list[player_name]
+    if ids then
+        local N_gauge_x = screen_pos_x - compass_hud.pos
+        local N_gauge_y = screen_pos_y + compass_hud.pos
+        local S_gauge_x = screen_pos_x - compass_hud.pos
+        local S_gauge_y = screen_pos_y + compass_hud.pos
+
+        --analogic part
+        add_analog_compass(ids, player, main_x_pos, main_y_pos, screen_pos_x, screen_pos_y, show_analogic)
+        remove_analog_compass(ids, player, show_analogic)
+
+        local player_yaw = 0
+        if player then
+            player_yaw = player:get_look_horizontal()
+            local player_pos = player:get_pos()
+            if player_pos then
+                player:hud_change(ids["x"], "text", string.format("%.1f", player_pos.x ))
+                player:hud_change(ids["y"], "text", string.format("%.1f", player_pos.y ))
+                player:hud_change(ids["z"], "text", string.format("%.1f", player_pos.z ))
+            end
+        end
+        if player_yaw then
+            local N_angle = math.deg(player_yaw)
+            local S_angle = N_angle + 180
+
+            if show_analogic then
+                compass_hud.animate_gauge(player, ids, "N_pt_", N_gauge_x, N_gauge_y, N_angle)
+                compass_hud.animate_gauge(player, ids, "S_pt_", S_gauge_x, S_gauge_y, S_angle)
+            end
+
+            --mostra a direção, mas como na vida real
+            local deg_angle = N_angle
+            local exibition_angle = deg_angle - (2*deg_angle)
+            if exibition_angle > 360 then exibition_angle = exibition_angle - 360 end
+            if exibition_angle < 0 then exibition_angle = exibition_angle + 360 end
+            local formatted = string.format(
+               "%.2fº",
+               exibition_angle
+            )
+            player:hud_change(ids["hdg"], "text", formatted)
+
+            --mostre-me também o nome
+            local dir_name = "---"
+            if exibition_angle > 337.5 or exibition_angle <= 22.5 then dir_name = "North" end
+            if exibition_angle > 22.5 and exibition_angle <= 67.5 then dir_name = "Northeast" end
+            if exibition_angle > 67.5 and exibition_angle <= 112.5 then dir_name = "East" end
+            if exibition_angle > 112.5 and exibition_angle <= 157.5 then dir_name = "Southeast" end
+            if exibition_angle > 157.5 and exibition_angle <= 202.5 then dir_name = "South" end
+            if exibition_angle > 202.5 and exibition_angle <= 247.5 then dir_name = "Southwest" end
+            if exibition_angle > 247.5 and exibition_angle <= 292.5 then dir_name = "West" end
+            if exibition_angle > 292.5 and exibition_angle <= 337.5 then dir_name = "Northwest" end
+            player:hud_change(ids["cardinal"], "text", dir_name)
+        end
+
+    else
+        ids = {}
 
         --labels posição
         ids["lblx"] = player:hud_add({
@@ -192,46 +291,11 @@ function compass_hud.update_hud(player)
             number    = 0xFFFF00,
         })
 
-        ids["bg"] = player:hud_add({
-            hud_elem_type = "image",
-            position  = {x = main_x_pos, y = main_y_pos},
-            offset    = {x = screen_pos_x, y = screen_pos_y},
-            text      = "direction_compass_face.png",
-            scale     = { x = 0.5, y = 0.5 },
-            alignment = { x = -2.25, y = 2.25 },
-        })
-
-        ids["N_pt_1"] = player:hud_add(elementN)
-        ids["N_pt_2"] = player:hud_add(elementN)
-        ids["N_pt_3"] = player:hud_add(elementN)
-        ids["N_pt_4"] = player:hud_add(elementN)
-        ids["N_pt_5"] = player:hud_add(elementN)
-        ids["N_pt_6"] = player:hud_add(elementN)
-        ids["N_pt_7"] = player:hud_add(elementN)
-
-        ids["S_pt_1"] = player:hud_add(elementS)
-        ids["S_pt_2"] = player:hud_add(elementS)
-        ids["S_pt_3"] = player:hud_add(elementS)
-        ids["S_pt_4"] = player:hud_add(elementS)
-        ids["S_pt_5"] = player:hud_add(elementS)
-        ids["S_pt_6"] = player:hud_add(elementS)
-        ids["S_pt_7"] = player:hud_add(elementS)
-
-        ids["compass_center"] = player:hud_add({
-            hud_elem_type = "image",
-            position  = {x = main_x_pos, y = main_y_pos},
-            offset    = {x = screen_pos_x - 108, y = screen_pos_y + 108},
-            text      = "direction_compass_center.png",
-            scale     = { x = 4, y = 4 },
-            alignment = { x = -1.52, y = 1.50 },
-        })
-
-
         compass_hud.hud_list[player_name] = ids
     end
-    core.after(0.1, function()
+    --[[core.after(0.1, function()
         compass_hud.update_hud(player)
-	end)
+	end)]]--
 end
 
 
@@ -241,7 +305,7 @@ function compass_hud.remove_hud(player)
         --minetest.chat_send_all(player_name)
         local ids = compass_hud.hud_list[player_name]
         if ids then
-            if(ids["hdg"]) then
+            if(ids["lblx"]) then
                 player:hud_remove(ids["lblx"])
                 player:hud_remove(ids["lbly"])
                 player:hud_remove(ids["lblz"])
@@ -251,23 +315,9 @@ function compass_hud.remove_hud(player)
 
                 player:hud_remove(ids["hdg"])
                 player:hud_remove(ids["cardinal"])
-                player:hud_remove(ids["bg"])
-                player:hud_remove(ids["N_pt_7"])
-                player:hud_remove(ids["N_pt_6"])
-                player:hud_remove(ids["N_pt_5"])
-                player:hud_remove(ids["N_pt_4"])
-                player:hud_remove(ids["N_pt_3"])
-                player:hud_remove(ids["N_pt_2"])
-                player:hud_remove(ids["N_pt_1"])
 
-                player:hud_remove(ids["S_pt_7"])
-                player:hud_remove(ids["S_pt_6"])
-                player:hud_remove(ids["S_pt_5"])
-                player:hud_remove(ids["S_pt_4"])
-                player:hud_remove(ids["S_pt_3"])
-                player:hud_remove(ids["S_pt_2"])
-                player:hud_remove(ids["S_pt_1"])
-                player:hud_remove(ids["compass_center"])
+                remove_analog_compass(ids, player, true)
+
             end
         end
         compass_hud.hud_list[player_name] = nil
@@ -275,7 +325,7 @@ function compass_hud.remove_hud(player)
 
 end
 
-minetest.register_on_joinplayer(compass_hud.update_hud)
+--minetest.register_on_joinplayer(compass_hud.update_hud)
 
 minetest.register_on_leaveplayer(function(player)
     compass_hud.remove_hud(player)
