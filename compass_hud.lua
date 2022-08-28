@@ -18,12 +18,12 @@ local function add_analog_compass(ids, player, main_x_pos, main_y_pos, screen_po
 
         ids["pointer"] = player:hud_add({
             hud_elem_type = "compass",
-            size = {x=100,y=100},
+            size = {x=120,y=120},
             direction = 0,
             position  = {x = main_x_pos, y = main_y_pos},
             offset    = {x = screen_pos_x, y = screen_pos_y},
             text="direction_compass_pointer.png",
-            alignment = { x = -2.4, y = 2.4 },
+            alignment = { x = -2.0, y = 2.0 },
         })
 
         compass_hud.hud_list[player_name] = ids
