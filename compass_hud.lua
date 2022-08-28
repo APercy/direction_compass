@@ -6,64 +6,26 @@ local function add_analog_compass(ids, player, main_x_pos, main_y_pos, screen_po
     show_analogic = show_analogic or false
     if show_analogic and not ids["bg"] then
         local player_name = player:get_player_name()
-        local S_pointer_texture = "direction_compass_ind_box.png"
-        local N_pointer_texture = "direction_compass_ind_box_red.png"
-
-        local N_gauge_x = screen_pos_x - compass_hud.pos
-        local N_gauge_y = screen_pos_y + compass_hud.pos
-        local S_gauge_x = screen_pos_x - compass_hud.pos
-        local S_gauge_y = screen_pos_y + compass_hud.pos
-
-        local elementN = {
-            hud_elem_type = "image",
-            position  = {x = main_x_pos, y = main_y_pos},
-            offset    = {x = N_gauge_x, y = N_gauge_y},
-            text      = N_pointer_texture,
-            scale     = { x = 5, y = 5},
-            alignment = { x = -1.12, y = 1.12 },
-        }
-        local elementS = {
-            hud_elem_type = "image",
-            position  = {x = main_x_pos, y = main_y_pos},
-            offset    = {x = S_gauge_x, y = S_gauge_y},
-            text      = S_pointer_texture,
-            scale     = { x = 5, y = 5},
-            alignment = { x = -1.12, y = 1.12 },
-        }
-
+        
         ids["bg"] = player:hud_add({
             hud_elem_type = "image",
             position  = {x = main_x_pos, y = main_y_pos},
             offset    = {x = screen_pos_x, y = screen_pos_y},
             text      = "direction_compass_face.png",
             scale     = { x = 0.5, y = 0.5 },
-            alignment = { x = -2.25, y = 2.25 },
+            alignment = { x = -2.24, y = 2.24 },
         })
 
-        ids["N_pt_1"] = player:hud_add(elementN)
-        ids["N_pt_2"] = player:hud_add(elementN)
-        ids["N_pt_3"] = player:hud_add(elementN)
-        ids["N_pt_4"] = player:hud_add(elementN)
-        ids["N_pt_5"] = player:hud_add(elementN)
-        ids["N_pt_6"] = player:hud_add(elementN)
-        ids["N_pt_7"] = player:hud_add(elementN)
-
-        ids["S_pt_1"] = player:hud_add(elementS)
-        ids["S_pt_2"] = player:hud_add(elementS)
-        ids["S_pt_3"] = player:hud_add(elementS)
-        ids["S_pt_4"] = player:hud_add(elementS)
-        ids["S_pt_5"] = player:hud_add(elementS)
-        ids["S_pt_6"] = player:hud_add(elementS)
-        ids["S_pt_7"] = player:hud_add(elementS)
-
-        ids["compass_center"] = player:hud_add({
-            hud_elem_type = "image",
+        ids["pointer"] = player:hud_add({
+            hud_elem_type = "compass",
+            size = {x=100,y=100},
+            direction = 0,
             position  = {x = main_x_pos, y = main_y_pos},
-            offset    = {x = screen_pos_x - 108, y = screen_pos_y + 108},
-            text      = "direction_compass_center.png",
-            scale     = { x = 4, y = 4 },
-            alignment = { x = -1.52, y = 1.50 },
+            offset    = {x = screen_pos_x, y = screen_pos_y},
+            text="direction_compass_pointer.png",
+            alignment = { x = -2.4, y = 2.4 },
         })
+
         compass_hud.hud_list[player_name] = ids
     end
 end
@@ -73,78 +35,12 @@ local function remove_analog_compass(ids, player, show_analogic)
     if not show_analogic and ids["bg"] then
         local player_name = player:get_player_name()
         player:hud_remove(ids["bg"])
+        player:hud_remove(ids["pointer"])
         ids["bg"] = nil
-        player:hud_remove(ids["N_pt_7"])
-        player:hud_remove(ids["N_pt_6"])
-        player:hud_remove(ids["N_pt_5"])
-        player:hud_remove(ids["N_pt_4"])
-        player:hud_remove(ids["N_pt_3"])
-        player:hud_remove(ids["N_pt_2"])
-        player:hud_remove(ids["N_pt_1"])
-        ids["N_pt_7"] = nil
-        ids["N_pt_6"] = nil
-        ids["N_pt_5"] = nil
-        ids["N_pt_4"] = nil
-        ids["N_pt_3"] = nil
-        ids["N_pt_2"] = nil
-        ids["N_pt_1"] = nil
-
-        player:hud_remove(ids["S_pt_7"])
-        player:hud_remove(ids["S_pt_6"])
-        player:hud_remove(ids["S_pt_5"])
-        player:hud_remove(ids["S_pt_4"])
-        player:hud_remove(ids["S_pt_3"])
-        player:hud_remove(ids["S_pt_2"])
-        player:hud_remove(ids["S_pt_1"])
-        ids["S_pt_7"] = nil
-        ids["S_pt_6"] = nil
-        ids["S_pt_5"] = nil
-        ids["S_pt_4"] = nil
-        ids["S_pt_3"] = nil
-        ids["S_pt_2"] = nil
-        ids["S_pt_1"] = nil
-
-        player:hud_remove(ids["compass_center"])
-        ids["compass_center"] = nil
+        ids["pointer"] = nil
 
         compass_hud.hud_list[player_name] = ids
     end
-end
-
-function compass_hud.animate_gauge(player, ids, prefix, x, y, angle)
-    local deg_angle = angle + 180
-    if deg_angle > 360 then deg_angle = deg_angle - 360 end
-    if deg_angle < 0 then deg_angle = deg_angle + 360 end
-
-    --aqui exibe no analogico
-    local angle_in_rad = math.rad(deg_angle)
-
-    local dim = 5
-    local pos_x = math.sin(angle_in_rad) * dim
-    local pos_y = math.cos(angle_in_rad) * dim
-    --minetest.chat_send_all(prefix .. "2")
-    player:hud_change(ids[prefix .. "2"], "offset", {x = pos_x + x, y = pos_y + y})
-    dim = 10
-    pos_x = math.sin(angle_in_rad) * dim
-    pos_y = math.cos(angle_in_rad) * dim
-    player:hud_change(ids[prefix .. "3"], "offset", {x = pos_x + x, y = pos_y + y})
-    dim = 15
-    pos_x = math.sin(angle_in_rad) * dim
-    pos_y = math.cos(angle_in_rad) * dim
-    player:hud_change(ids[prefix .. "4"], "offset", {x = pos_x + x, y = pos_y + y})
-    dim = 20
-    pos_x = math.sin(angle_in_rad) * dim
-    pos_y = math.cos(angle_in_rad) * dim
-    player:hud_change(ids[prefix .. "5"], "offset", {x = pos_x + x, y = pos_y + y})
-    dim = 25
-    
-    pos_x = math.sin(angle_in_rad) * dim
-    pos_y = math.cos(angle_in_rad) * dim
-    player:hud_change(ids[prefix .. "6"], "offset", {x = pos_x + x, y = pos_y + y})
-    dim = 30
-    pos_x = math.sin(angle_in_rad) * dim
-    pos_y = math.cos(angle_in_rad) * dim
-    player:hud_change(ids[prefix .. "7"], "offset", {x = pos_x + x, y = pos_y + y})
 end
 
 function compass_hud.update_hud(player, show_analogic)
@@ -181,11 +77,6 @@ function compass_hud.update_hud(player, show_analogic)
         if player_yaw then
             local N_angle = math.deg(player_yaw)
             local S_angle = N_angle + 180
-
-            if show_analogic then
-                compass_hud.animate_gauge(player, ids, "N_pt_", N_gauge_x, N_gauge_y, N_angle)
-                compass_hud.animate_gauge(player, ids, "S_pt_", S_gauge_x, S_gauge_y, S_angle)
-            end
 
             --mostra a direção, mas como na vida real
             local deg_angle = N_angle
